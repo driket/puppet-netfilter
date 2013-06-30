@@ -1,0 +1,17 @@
+#!/bin/bash
+#
+# THIS FILE IS MANAGED BY PUPPET
+# /etc/puppet/modules/mv_netfilter/templates/setup_iptables.sh.erb
+#
+# Disable all iptable (test only)
+
+## On flush iptables.
+/sbin/iptables -F
+
+## On supprime toutes les chaînes utilisateurs.
+/sbin/iptables -X
+
+## On drop tout le trafic entrant, sortant et forward par défaut
+/sbin/iptables -P INPUT ACCEPT
+/sbin/iptables -P OUTPUT ACCEPT
+/sbin/iptables -P FORWARD ACCEPT

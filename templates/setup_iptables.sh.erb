@@ -1,0 +1,98 @@
+#!/bin/bash
+#
+# THIS FILE IS MANAGED BY PUPPET
+# <%= file %>
+#
+ 
+## On flush iptables.
+/sbin/iptables -F
+ 
+## On supprime toutes les chaînes utilisateurs.
+/sbin/iptables -X
+ 
+## On drop tout le trafic entrant, sortant et forward par défaut
+/sbin/iptables -P INPUT <%= @input_policy %>
+/sbin/iptables -P OUTPUT <%= @output_policy %>
+/sbin/iptables -P FORWARD <%= @forward_policy %>
+ 
+## On drop les scans XMAS et NULL.
+/sbin/iptables -A INPUT -p tcp --tcp-flags FIN,URG,PSH FIN,URG,PSH -j DROP
+/sbin/iptables -A INPUT -p tcp --tcp-flags ALL ALL -j DROP
+/sbin/iptables -A INPUT -p tcp --tcp-flags ALL NONE -j DROP
+/sbin/iptables -A INPUT -p tcp --tcp-flags SYN,RST SYN,RST -j DROP
+ 
+## Dropper silencieusement tous les paquets broadcastés.
+/sbin/iptables -A INPUT -m pkttype --pkt-type broadcast -j DROP
+
+<% if @respond_to_established_connections == 'true' %>
+## Permettre à une connexion ouverte de recevoir du trafic en entrée.
+/sbin/iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+ 
+## Permettre à une connexion ouverte de recevoir du trafic en sortie.
+#/sbin/iptables -A OUTPUT -m state ! --state INVALID -j ACCEPT
+/sbin/iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+<% end %>
+
+<% if @respong_to_ping == 'true' %>
+# Respond to ping
+/sbin/iptables -A INPUT -p icmp -j ACCEPT
+# ping
+/sbin/iptables -A OUTPUT -p icmp -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+<% end %>
+
+<% for rule in @input_rules %>
+# INPUT : <%= rule['service'] %>
+<% if rule['i'] -%>
+/sbin/iptables -A INPUT -p <%= rule['p'] %> -i <%= rule['i'] %> --dport <%= rule['dport'] %> -j <%= rule['j'] %>
+<% else -%>
+/sbin/iptables -A INPUT -p <%= rule['p'] %> --dport <%= rule['dport'] %> -j <%= rule['j'] %>
+<% end %>
+<% end %>
+
+<% for rule in @output_rules %>
+# OUTPUT : <%= rule['service'] %>
+<% if rule['o'] -%>
+/sbin/iptables -A OUTPUT -p <%= rule['p'] %> -o <%= rule['o'] %> --dport <%= rule['dport'] %> -j <%= rule['j'] %>
+<% else -%>
+/sbin/iptables -A OUTPUT -p <%= rule['p'] %> --dport <%= rule['dport'] %> -j <%= rule['j'] %>
+<% end %>
+<% end %>
+
+<% for rule in @forward_rules %>
+# FORWARD : <%= rule['service'] %>
+<% if rule['o'] -%>
+/sbin/iptables -A FORWARD -o <%= rule['o'] %> -j <%= rule['j'] %>
+<% else -%>
+/sbin/iptables -A FORWARD -i <%= rule['i'] %> -j <%= rule['j'] %>
+<% end %>
+<% end %>
+
+<% for rule in @prerouting_rules %>
+# PREROUTING : <%= rule['service'] %>
+/sbin/iptables -A PREROUTING -t nat -i <%= rule['i'] %> -p tcp --dport <%= rule['dport'] %> -j DNAT --to <%= rule['to'] %>:<%= rule['dport'] %>
+/sbin/iptables -A INPUT -p <%= rule['p'] %> -m state --state NEW --dport <%= rule['dport'] %> -i br0 -j ACCEPT
+<% end %>
+
+<% for rule in @postrouting_rules %>
+# POSTROUTING : <%= rule['service'] %>
+<% if rule['s'] -%>
+/sbin/iptables -t nat -A POSTROUTING -s <%= rule['s'] %> -o <%= rule['o'] %> -j <%= rule['j'] %>
+<% else -%>
+/sbin/iptables -t nat -A POSTROUTING -o <%= rule['o'] %> -j <%= rule['j'] %>
+<% end %>
+<% end %>
+# reference : /sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+
+
+## On accepte la boucle locale en entrée.
+/sbin/iptables -I INPUT -i lo -j ACCEPT
+/sbin/iptables -I OUTPUT -o lo -j ACCEPT
+ 
+## On log les paquets en entrée.
+#/sbin/iptables -A INPUT -j LOG
+ 
+## On log les paquets forward.
+#/sbin/iptables -A FORWARD -j LOG 
+ 
+exit 0
