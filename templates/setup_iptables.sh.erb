@@ -70,8 +70,8 @@
 
 <% for rule in @prerouting_rules %>
 # PREROUTING : <%= rule['service'] %>
-/sbin/iptables -A PREROUTING -t nat -i <%= rule['i'] %> -p tcp --dport <%= rule['dport'] %> -j DNAT --to <%= rule['to'] %>:<%= rule['dport'] %>
-/sbin/iptables -A INPUT -p <%= rule['p'] %> -m state --state NEW --dport <%= rule['dport'] %> -i br0 -j ACCEPT
+/sbin/iptables -A PREROUTING -t nat -i <%= rule['pre_i'] %> -p tcp --dport <%= rule['dport'] %> -j DNAT --to <%= rule['to'] %>:<%= rule['dport'] %>
+/sbin/iptables -A INPUT -p <%= rule['p'] %> -m state --state NEW --dport <%= rule['dport'] %> -i <%= rule['input_i'] %> -j ACCEPT
 <% end %>
 
 <% for rule in @postrouting_rules %>
