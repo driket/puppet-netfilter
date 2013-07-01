@@ -22,6 +22,7 @@ define mv_netfilter::config::iptables (	$respong_to_ping  = 'true',
         group => 'root',
 		notify => Exec["setup_iptables.sh"],
     }	
+		
     exec { "setup_iptables.sh":
          command => "/opt/setup_iptables.sh",
 		 require => File["/opt/setup_iptables.sh"],
