@@ -8,6 +8,7 @@ define mv_netfilter::config::iptables (	$respong_to_ping  = 'true',
 										$forward_rules = {},
 										$prerouting_rules = {},
 										$postrouting_rules = {},
+										$always_accept = {},
 										) {
 	require('mv_netfilter')
 	require('mv_netfilter::packages')

@@ -86,8 +86,13 @@
 
 
 ## On accepte la boucle locale en entrée.
-/sbin/iptables -I INPUT -i lo -j ACCEPT
-/sbin/iptables -I OUTPUT -o lo -j ACCEPT
+<% for rule in @always_accept %>
+<% if rule['type'] == "INPUT" -%>
+/sbin/iptables -I INPUT -i <%= rule['i'] %> -j ACCEPT
+<% else if rule['type'] == "OUTPUT" -%>
+/sbin/iptables -I OUTPUT -o <%= rule['i'] %> -j ACCEPT
+<% end %> 
+<% end %>
  
 ## On log les paquets en entrée.
 #/sbin/iptables -A INPUT -j LOG
