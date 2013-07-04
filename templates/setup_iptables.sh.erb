@@ -89,7 +89,7 @@
 <% for rule in @always_accept %>
 <% if rule['type'] == "INPUT" -%>
 /sbin/iptables -I INPUT -i <%= rule['i'] %> -j ACCEPT
-<% else if rule['type'] == "OUTPUT" -%>
+<% else rule['type'] == "OUTPUT" -%>
 /sbin/iptables -I OUTPUT -o <%= rule['i'] %> -j ACCEPT
 <% end %> 
 <% end %>
