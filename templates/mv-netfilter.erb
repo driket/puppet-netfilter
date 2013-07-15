@@ -1,0 +1,47 @@
+#! /bin/sh
+#
+# THIS FILE IS MANAGED BY PUPPET
+# <%= file %>
+#
+# /etc/init.d/mv-netfilter
+#
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+NAME="mv-netfilter"
+
+. /lib/lsb/init-functions
+
+case "$1" in
+  start)
+    log_begin_msg "Starting $NAME"
+    /opt/mv_netfilter/setup_iptables.sh
+    log_end_msg $?
+    ;;
+  stop)
+    log_begin_msg "Stopping $NAME"
+    /opt/mv_netfilter/disable_iptables.sh
+    log_end_msg $?
+    ;;
+  restart)
+    log_begin_msg "Restarting $NAME"
+    /opt/mv_netfilter/disable_iptables.sh
+    /opt/mv_netfilter/setup_iptables.sh
+    log_end_msg $?
+  ;; 
+  status)
+    IP_TABLES=`/sbin/iptables -L` 
+    if echo $IP_TABLES | /bin/grep -q "dpt:http"; then
+      log_success_msg "mv-netfilter is running"
+      exit 0
+    else
+      log_failure_msg "mv-netfilter is not running"
+      exit 1
+    fi
+    ;;
+  *)
+    echo "Usage: /etc/init.d/mv-netfilter {start|stop|status}"
+    exit 1
+    ;;
+esac
+
+exit 0

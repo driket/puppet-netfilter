@@ -2,6 +2,6 @@
 class mv_netfilter::params {
 
 	$packages = ""
-	$service_name = ""
+	$service_name = "mv-netfilter"
 	$config_path = ""
 }
